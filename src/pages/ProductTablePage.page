@@ -1,0 +1,152 @@
+<apex:page controller="ProductTablePageController" title="Products" showHeader="false">
+    <apex:slds />
+    
+    <div>
+        <button onclick="showModal()" class="slds-button slds-button_outline-brand slds-m-around_medium">+ Create New Product</button>
+    </div>
+    
+	<apex:dataTable id="table" value="{!products}" var="prod" styleClass="slds-table slds-table_bordered ">
+    	<apex:column headerValue="IMAGE">
+        	<apex:image width="200" height="200" value="{!prod.ImageURL__c}"/>
+        </apex:column>
+            
+        <apex:column headerValue="NAME">
+        	<apex:outputText value="{!prod.Name}"/>
+        </apex:column>
+            
+        <apex:column headerValue="DESCRIPTION"  styleClass="slds-cell-wrap">
+            <apex:outputText value="{!prod.Description__c}"/>         	
+        </apex:column>
+            
+        <apex:column headerValue="PRICE">
+        	<apex:outputText value="{!prod.UnitPrice__c} $"/>
+        </apex:column>
+            
+        <apex:column headerValue="AVAILABLE UNITS">
+        	<apex:outputText value="{!prod.UnitsAvailable__c}"/>
+        </apex:column>
+	</apex:dataTable>
+    
+    <div id="boxCreateP" class="slds-hide">
+        <section  id="modalCreateP" role="dialog" aria-modal="true" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <div class="slds-modal__header">
+					<h2 class="slds-text-heading_medium slds-hyphenate">New Product</h2>
+				</div>
+                <div id="errorMessage" class="slds-hide">
+                	<p id="errorTextMessage"></p>
+                </div>   
+				<div class="slds-modal__content  slds-p-around_small">                                 
+					<div class="slds-grid slds-wrap">
+						<div class="slds-col">
+							<div>
+								<label for="theName">Name </label><br/>
+								<input type="text" class="slds-input" style="width:250px" id="theName" value=""/>  
+							</div>                        
+							<div class="slds-m-vertical_small">
+								<label for="theImageURL">ImageURL </label><br/>
+								<input type="text" class="slds-input" style="width:250px" id="theImageURL" value=""/>
+							</div>
+							<div>
+								<label for="theUnitPrice">UnitPrice </label><br/>
+								<input type="number" class="slds-input" style="width:250px" id="theUnitPrice" value=""/>  
+							</div>
+                            <div class="slds-m-vertical_small">
+								<label for="theUnitAvailable">UnitAvailable </label><br/>
+								<input type="number" class="slds-input" style="width:250px" id="theUnitAvailable" value=""/>  
+							</div> 
+						</div>
+                        
+						<div class="slds-col">                      
+							<div class="slds-m-vertical_small">
+								<label for="theAddedDate">AddedDate </label><br/>
+								<input type="date" class="slds-input" style="width:250px" id="theAddedDate" value=""/>  
+							</div>
+							<div>
+								<label for="theDescripthion">Descripthion </label><br/>
+								<textarea id="theDescripthion" cols="32" rows="7"></textarea>
+							</div>
+						</div>
+					</div>  
+				</div>
+                
+                <div class="slds-modal__footer">
+                    <div class="slds-align_absolute-center">
+                        <button onclick="saveNewValues()" class="slds-button slds-button_brand">Save</button>
+                        <button onclick="hideModal()" class="slds-button slds-button_neutral">Cancel</button>        				
+                    </div>
+                </div>                
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </div>
+    
+    <script>
+    	function showModal(){
+            document.getElementById('boxCreateP').classList.remove("slds-hide");                        
+        }
+    
+    	function hideModal(){
+        	document.getElementById('boxCreateP').classList.add("slds-hide");
+            document.getElementById('errorMessage').classList.add("slds-hide");  
+            clearFields();
+        }
+    
+    	function clearFields(){            
+            document.getElementById('theName').value='';
+            document.getElementById('theImageURL').value='';
+            document.getElementById('theUnitPrice').value='';
+            document.getElementById('theUnitAvailable').value='';
+            document.getElementById('theAddedDate').value='';
+            document.getElementById('theDescripthion').value='';  
+        }
+    
+		function saveNewValues(){
+            var name = document.getElementById('theName').value;
+            var imageURL = document.getElementById('theImageURL').value;
+            var unitPrice = document.getElementById('theUnitPrice').value;
+            var unitAvailable = document.getElementById('theUnitAvailable').value;
+            var addedDate = document.getElementById('theAddedDate').value;
+            var descripthion = document.getElementById('theDescripthion').value; 
+            
+            if(unitPrice > 0 && name != '' && unitAvailable > 0 && descripthion != ''){
+                document.getElementById('errorMessage').classList.remove("slds-theme_error");
+                document.getElementById('errorMessage').classList.add("slds-theme_success");
+            	document.getElementById('errorTextMessage').innerHTML = "Product Created";
+            	document.getElementById('errorMessage').classList.remove("slds-hide");  
+                
+            	createProduct(name,imageURL,unitPrice,unitAvailable,addedDate,descripthion); 
+                
+                hideModal();
+            }else{  
+                document.getElementById('errorMessage').classList.remove("slds-hide");    
+                document.getElementById('errorMessage').classList.add("slds-theme_error");
+                document.getElementById('errorTextMessage').innerHTML = "ERROR:<br/>";
+                if(unitPrice <= 0){
+                   document.getElementById('errorTextMessage').innerHTML += "- Unit Price Less Than Or Equal 0<br/>";
+            	}
+                if(name == ''){
+                    document.getElementById('errorTextMessage').innerHTML += "- Name Not Defined<br/>";
+                }  
+                if(unitAvailable <= 0){
+                    document.getElementById('errorTextMessage').innerHTML += "- Unit Available Less Than Or Equal 0<br/>";
+                }
+                if(descripthion == ''){
+                    document.getElementById('errorTextMessage').innerHTML += "- Descripthion Not Defined";
+                }
+            }
+        }
+    </script>
+    
+    <apex:form >
+        <apex:actionFunction name="createProduct" action="{!productCreation}" reRender="table">
+            <apex:param name="name" value=""/>
+            <apex:param name="imageURL" value=""/>
+            <apex:param name="unitPrice" value=""/>
+            <apex:param name="unitAvailable" value=""/>
+            <apex:param name="addedDate" value=""/>
+            <apex:param name="descripthion" value=""/>
+        </apex:actionFunction>
+    </apex:form>
+    
+</apex:page>
